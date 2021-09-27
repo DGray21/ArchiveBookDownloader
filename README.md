@@ -12,7 +12,7 @@ Download borrow-only books off archive.org.
 There are two main ways to use this script:
 * Automatic mode (useful batch jobs):
   * `BookDownloader.py <ID> <username> <password> <output dir>`   
-   \<ID\> \- The id of the book your are downloading (usually https://archive.org/details/\<ID\>)   
+   \<ID\> \- The id of the book your are downloading (usually https://archive.org/details/<ID\>)   
    \<username\> \- Archive username  
    \<password\> \- Archive password  
    \<output dir\> \- Output directory to create the output dir in (leave blank to set the current dir as output)  
