@@ -20,6 +20,7 @@ There are two main ways to use this script:
   * To run in manual mode, run the script without any arguments. It will ask for the id , username, password and output directory.
 
 ## TODO for future releases
+- [ ] Binary release
 - [ ] Headless mode (coming in R2)
 - [ ] Webdriver selection (chrome/firefox)
 - [ ] Lists/batch support
