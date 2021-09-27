@@ -24,5 +24,8 @@ There are two main ways to use this script:
 - [ ] Headless mode (coming in R2)
 - [ ] Webdriver selection (chrome/firefox)
 - [ ] Lists/batch support
-- [ ] GUI?
+- [ ] GUI?  
 
+
+
+Under MIT licsense
