@@ -252,10 +252,10 @@ while currentPage != pageCount:
     for page in pages:
         print('Downloading page ' + str(actualPageCount))
         url = page.get_attribute('src')
-        url = re.sub(r'scale=\d', 'scale=3', url)  # Set the image url to load the medium size image
+        url = re.sub(r'scale=\d', 'scale=8', url)  # Set the image url to load the medium size image
         # Open new window with the image
         openNewTab(url, browser)
-        url = url.replace('scale=3', 'scale=0')  # Set the image url to load the full size image
+        url = url.replace('scale=8', 'scale=0')  # Set the image url to load the full size image
         time.sleep(15)
         #print(url)
         # Download the image
