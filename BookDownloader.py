@@ -31,7 +31,7 @@ import sys
 import time
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
-
+from selenium.webdriver.common.by import By
 
 username = ''  # archive.org username
 password = ''  # archive.org password
@@ -39,20 +39,18 @@ password = ''  # archive.org password
 archiveId = ''  # archive.org item ID
 outputDir = ''  # Directory to create the output directory in
 
-archDir = ''    # Directory to put the files in
+archDir = ''  # Directory to put the files in
 
 # Page variables
 currentPage = 1
 pageCount = 1
-#pageCount_regex = re.compile(r'\s(\d\d\d\d)|\s(\d\d\d)|\s(\d\d)|\s(\d)')  # regex to get the page count
-#currentPage_regex = re.compile(r'/\((\d\d\d\d)|\((\d\d\d)|\((\d\d)|\((\d)')  # regex to get the current page
-pageFilename_regex = re.compile(r'_\d\d\d\d\.')     # regex to extract the page current number
+# pageCount_regex = re.compile(r'\s(\d\d\d\d)|\s(\d\d\d)|\s(\d\d)|\s(\d)')  # regex to get the page count
+# currentPage_regex = re.compile(r'/\((\d\d\d\d)|\((\d\d\d)|\((\d\d)|\((\d)')  # regex to get the current page
+pageFilename_regex = re.compile(r'_\d\d\d\d\.')  # regex to extract the page current number
 username_selector = '#maincontent > div > div > div.iaform.col-md-8.login-form-section > section.login-form-element.js-third-party-auth-toggle-view > form > label:nth-child(2) > input'
 password_selector = '#maincontent > div > div > div.iaform.col-md-8.login-form-section > section.login-form-element.js-third-party-auth-toggle-view > form > label:nth-child(4) > div > input'
 # Selectors for borrow/return button
-borrow_selectors = ['#IABookReaderMessageWrapper > div > div.BookReaderMessageBody > div.lending-action-group.btn-group > button.lending-primary-action.btn.btn-primary'
-                    , '#IABookReaderMessageWrapper > div > div.BookReaderMessageBody > button'
-                    , '#IABookReaderMessageWrapper > div > div.BookReaderMessageBody > button.BRaction.btn.btn-primary']
+borrow_selectors = [r"//div[@id='IABookReaderMessageWrapper']/ia-book-actions"]
 pagecount_selector = '#BookReader > div.BRfooter > div > nav > ul.controls > li.scrubber > p > span'
 nextPage_xpath = '//*[@title="Flip right"]'
 page_class = 'BRpageimage'
@@ -65,6 +63,7 @@ global nextPage_btn
 # start_time = 0      # Start time of the timer
 max_time = 55 * 60  # Time in which to borrow the book again
 end_time = 0
+
 
 # function calls
 def permissionTest(targetdir) -> bool:
@@ -84,13 +83,15 @@ def openNewTab(link: str, driver: webdriver.Chrome):
     driver.switch_to.window(driver.window_handles[-1])
     return driver.window_handles[-1]
 
-def downloadFile(fileUrl:str, driver: webdriver.Chrome):
+
+def downloadFile(fileUrl: str, driver: webdriver.Chrome):
     js = '''
    var link = document.createElement('a');
     link.setAttribute('href', '{0}');
     link.setAttribute('download', '');
     link.click();'''.format(url)
     driver.execute_script(js)
+
 
 def newChromeBrowser(headless=True, downloadPath=None):
     """ Helper function that creates a new Selenium browser """
@@ -105,28 +106,37 @@ def newChromeBrowser(headless=True, downloadPath=None):
     newBrowser = webdriver.Chrome(options=options)
     return newBrowser
 
-def refreshElements():
+
+def refreshElements(returnbook=False):
     global nextPage_btn
     global borrow_btn
     global browser
 
     elementsFound = False
-    for selector in borrow_selectors:
-        if elementsFound is False:
-            try:
-                borrow_btn = browser.find_element_by_css_selector(selector)
-                elementsFound = True
-                break   # Exit loop
-            except NoSuchElementException:
-                # Cannot find element
-                pass
+    try:
+        if returnbook:
+            borrow_btn = browser.find_element(By.XPATH, "//div[@id='IABookReaderMessageWrapper']/ia-book-actions") \
+                .shadow_root.find_element(By.CSS_SELECTOR,
+                                          "section > collapsible-action-group").shadow_root.find_element(
+                By.
+                    CSS_SELECTOR, "div > section.action-buttons.primary > button.ia-button.danger.initial")
+        else:
+            borrow_btn = browser.find_element(By.XPATH, "//div[@id='IABookReaderMessageWrapper']/ia-book-actions") \
+                .shadow_root.find_element(By.CSS_SELECTOR, "section > collapsible-action-group").shadow_root.find_element(
+                By.
+                CSS_SELECTOR, "div > section.action-buttons.primary > button.ia-button.primary.initial")
+        elementsFound = True
+    except NoSuchElementException:
+        # Cannot find element
+        pass
 
     if elementsFound is False:
         browser.quit()
         print('Cannot refresh elements')
         sys.exit('Exiting....')
 
-    nextPage_btn = browser.find_element_by_xpath(nextPage_xpath)
+    nextPage_btn = browser.find_element(By.XPATH, nextPage_xpath)
+
 
 # Check command line arguments
 if len(sys.argv) == 4:
@@ -184,9 +194,9 @@ browser.get('https://archive.org/account/login')
 time.sleep(30)
 
 # username textbox
-username_txt = browser.find_element_by_css_selector(username_selector)
+username_txt = browser.find_element(By.CSS_SELECTOR, username_selector)
 # password textbox
-password_txt = browser.find_element_by_css_selector(password_selector)
+password_txt = browser.find_element(By.CSS_SELECTOR, password_selector)
 
 username_txt.send_keys(username)
 password_txt.send_keys(password)
@@ -214,15 +224,16 @@ if browser.title == 'Internet Archive: Error':
 
 # Check to see if the item is a book that can be borrowed
 elementFound = False
-for cssSelector in borrow_selectors:
-    if elementFound is False:
-        try:
-            borrow_btn = browser.find_element_by_css_selector(cssSelector)
-            elementFound = True
-            break   # Exit loop
-        except:
-            # Cannot find element or other error
-            pass
+
+try:
+    borrow_btn = browser.find_element(By.XPATH, "//div[@id='IABookReaderMessageWrapper']/ia-book-actions") \
+        .shadow_root.find_element(By.CSS_SELECTOR,
+                                  "section > collapsible-action-group").shadow_root.find_element(
+        By.
+            CSS_SELECTOR, "div > section.action-buttons.primary >  button.ia-button.primary.initial")
+    elementFound = True
+except:
+    elementFound = False
 
 if elementFound is False:
     browser.quit()
@@ -235,11 +246,11 @@ borrow_btn.click()
 time.sleep(30)  # wait 30 seconds to borrow
 
 # Get the page count
-pageCount = int(browser.find_element_by_css_selector(pagecount_selector).text.split('of')[1].strip(' ()'))
+pageCount = int(browser.find_element(By.CSS_SELECTOR, pagecount_selector).text.split('of')[1].strip(' ()'))
 print('Book page count: ' + str(pageCount))
 
 # Get the next page button
-nextPage_btn = browser.find_element_by_xpath(nextPage_xpath)
+nextPage_btn = browser.find_element(By.XPATH, nextPage_xpath)
 
 # Record end time
 end_time = time.perf_counter() + max_time
@@ -248,7 +259,7 @@ actualPageCount = 1
 # Start download loop
 while currentPage != pageCount:
     # Get image URL's for both pages
-    pages = browser.find_elements_by_class_name(page_class)
+    pages = browser.find_elements(By.CLASS_NAME, page_class)
     for page in pages:
         print('Downloading page ' + str(actualPageCount))
         url = page.get_attribute('src')
@@ -257,7 +268,7 @@ while currentPage != pageCount:
         openNewTab(url, browser)
         url = url.replace('scale=8', 'scale=0')  # Set the image url to load the full size image
         time.sleep(15)
-        #print(url)
+        # print(url)
         # Download the image
         downloadFile(url, browser)
         time.sleep(15)
@@ -269,7 +280,7 @@ while currentPage != pageCount:
 
     if time.perf_counter() > end_time:
         print('Returning and borrowing the book again..,')
-        refreshElements()
+        refreshElements(returnbook=True)
         # Return to the book and borrow again
         print('Returning book...')
         borrow_btn.click()
@@ -278,11 +289,11 @@ while currentPage != pageCount:
         print('Borrowing book...')
         borrow_btn.click()
         time.sleep(30)  # wait 30 seconds to borrow
-        refreshElements()
+        refreshElements(returnbook=True)
         end_time = time.perf_counter() + max_time
         print('Continuing book downloading...')
-    if browser.find_element_by_css_selector(pagecount_selector) is not None:
-        currentPage = int(browser.find_element_by_css_selector(pagecount_selector).text.split('of')[0].strip(' ()'))
+    if browser.find_element(By.CSS_SELECTOR, pagecount_selector) is not None:
+        currentPage = int(browser.find_element(By.CSS_SELECTOR, pagecount_selector).text.split('of')[0].strip(' ()'))
 
     nextPage_btn.click()  # Go to the next page
     time.sleep(5)
