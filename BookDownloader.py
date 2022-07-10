@@ -17,11 +17,10 @@
 #                      the current working directory is used.
 #   Notes:
 #       The script downloads the book images to the folder
-#       named <ID>. If the folder exists then the script
-#       will skip any files of the same name.
+#       named <ID>. 
 #
 #       This script only downloads borrowable books from
-#       archive.,org. Regular files are not downloadable
+#       archive.org. Regular files are not downloadable
 #       with this script yet.
 
 #   Import the necessary libraries
