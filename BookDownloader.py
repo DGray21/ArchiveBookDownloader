@@ -137,6 +137,12 @@ def refreshElements(returnbook=False):
     nextPage_btn = browser.find_element(By.XPATH, nextPage_xpath)
 
 
+# Access the shadow root of an document
+def expand_shadow_element(element):
+  shadow_root = driver.execute_script('return arguments[0].shadowRoot', element)
+  return shadow_root
+
+
 # Check command line arguments
 if len(sys.argv) == 4:
     archiveId = sys.argv[1]
