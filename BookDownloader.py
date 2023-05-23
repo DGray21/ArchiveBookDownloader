@@ -142,7 +142,6 @@ def expand_shadow_element(element):
   shadow_root = driver.execute_script('return arguments[0].shadowRoot', element)
   return shadow_root
 
-
 # Check command line arguments
 if len(sys.argv) == 4:
     archiveId = sys.argv[1]
@@ -192,7 +191,7 @@ else:
 archDir = outputDir + os.sep + archiveId  # set archive directory
 
 # Open selenium window
-browser = newChromeBrowser(False, archDir)  # Open selenium windows (will convert to phantomJS in the future?)
+browser = newChromeBrowser(False, archDir)  # Open selenium window
 
 # Log onto archive account
 browser.get('https://archive.org/account/login')
@@ -261,27 +260,34 @@ nextPage_btn = browser.find_element(By.XPATH, nextPage_xpath)
 end_time = time.perf_counter() + max_time
 
 actualPageCount = 1
+
+imageUrlList = []
+
 # Start download loop
-while currentPage != pageCount:
+while actualPageCount < pageCount:
     # Get image URL's for both pages
     pages = browser.find_elements(By.CLASS_NAME, page_class)
     for page in pages:
         print('Downloading page ' + str(actualPageCount))
         url = page.get_attribute('src')
-        url = re.sub(r'scale=\d', 'scale=8', url)  # Set the image url to load the medium size image
-        # Open new window with the image
-        openNewTab(url, browser)
-        url = url.replace('scale=8', 'scale=0')  # Set the image url to load the full size image
-        time.sleep(15)
-        # print(url)
-        # Download the image
-        downloadFile(url, browser)
-        time.sleep(15)
-        # Increment page count
-        actualPageCount += 1
-        # Close current window
-        browser.close()
-        browser.switch_to.window(browser.window_handles[0])
+        if url not in imageUrlList:
+            imageUrlList.append(url)  # Add link to image url list
+            url = re.sub(r'scale=\d', 'scale=8', url)  # Set the image url to load the medium size image
+            # Open new window with the image
+            openNewTab(url, browser)
+            url = url.replace('scale=8', 'scale=0')  # Set the image url to load the full size image
+            time.sleep(3)
+            # print(url)
+            # Download the image
+            downloadFile(url, browser)
+            time.sleep(3)
+            # Increment page count
+            actualPageCount += 1
+            # Close current window
+            browser.close()
+            browser.switch_to.window(browser.window_handles[0])
+        else:
+            break   # Exit loop
 
     if time.perf_counter() > end_time:
         print('Returning and borrowing the book again..,')
@@ -289,11 +295,11 @@ while currentPage != pageCount:
         # Return to the book and borrow again
         print('Returning book...')
         borrow_btn.click()
-        time.sleep(30)  # wait 20 seconds to return
+        time.sleep(25)  # wait 25 seconds to return
         refreshElements()
         print('Borrowing book...')
         borrow_btn.click()
-        time.sleep(30)  # wait 30 seconds to borrow
+        time.sleep(25)  # wait 25 seconds to borrow
         refreshElements(returnbook=True)
         end_time = time.perf_counter() + max_time
         print('Continuing book downloading...')
