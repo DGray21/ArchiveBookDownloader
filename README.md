@@ -26,6 +26,8 @@ There are two main ways to use this script:
 - [ ] Lists/batch support
 - [ ] GUI?  
 
+## Known bugs
+* Script may crash as it tries to return a book after downloading
 
 
 Under MIT license
